@@ -14,12 +14,11 @@ fictional (Simpsons-style) and coordinates are arbitrary. Licensed **CC0 1.0**
 
 Both carry `latitude` / `longitude` geo columns and an `isCapital` **0/1**
 column. The 0/1 column proves the type-coercion rule: without an explicit
-`boolean` type it is stored as **Integer**, never silently as Boolean.
+`boolean` type it is kept as an **Integer**, never silently as Boolean.
 
-## Regenerate
+## Usage (URL mode — Memo 096)
 
-```bash
-node tests/fixtures/synthetic-csv/build-fixture.mjs
-```
-
-This builds `synthetic-csv.db` (gitignored) and asserts the `sqlite-csv` seal.
+There is no converter and no `.db` artifact anymore. Tests and the manual runner
+read these source files locally and serve them through a stubbed `fetch`, so the
+URL pipeline ( fetch -> parse -> validate-on-load -> in-memory ) runs end to end
+without a network. Never commit third-party CSV/TSV — only this CC0 sample.

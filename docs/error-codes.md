@@ -1,13 +1,26 @@
 # CSV-NNN Error Codes
 
-Reference for all codes emitted by `csv-tsv-sqlite-toolkit`. Codes are grouped by
-severity, signalled by the numeric range.
+Reference for all codes emitted by `csv-tsv-sqlite-toolkit`. There are two
+families: the `CSV-URL-NNN` codes from the URL-mode load path (Memo 096) and the
+underlying `CSV-NNN` parser codes, grouped by severity via the numeric range.
+
+## CSV-URL-NNN (URL load path)
+
+| Code | Meaning |
+|------|---------|
+| `CSV-URL-001` | `url` missing, not a string, or not HTTPS |
+| `CSV-URL-002` | fetch failed (network error or non-2xx) / file unparseable as CSV/TSV |
+| `CSV-URL-003` | validate-on-load: a configured geo or `typeCoercion` column is missing |
+| `CSV-URL-004` | query/accessor called for a URL that was never loaded |
+| `CSV-URL-005` | `parseConfig` missing or incomplete (no silent default) |
+
+## CSV-NNN (parser)
 
 | Range | Severity |
 |-------|----------|
-| `CSV-001` – `CSV-099` | ERROR (blocks conversion in default mode) |
-| `CSV-100` – `CSV-199` | WARNING (allows conversion, but no seal) |
-| `CSV-200` – `CSV-299` | INFO (informational, seal still possible) |
+| `CSV-001` – `CSV-099` | ERROR (blocks the load) |
+| `CSV-100` – `CSV-199` | WARNING |
+| `CSV-200` – `CSV-299` | INFO |
 
 ## ERROR codes
 
@@ -40,11 +53,11 @@ severity, signalled by the numeric range.
 
 There is **no default** for any of the five mandatory config fields
 (`separator`, `decimal`, `latColumn`, `lonColumn`, `typeCoercion`). A missing
-value raises `CSV-001` and aborts the conversion — the converter never guesses.
+value raises `CSV-URL-005` and aborts the load — the store never guesses.
 
 ## Type coercion rule
 
-A `0`/`1` column **without** an explicit type is stored as **Integer**, never
+A `0`/`1` column **without** an explicit type is kept as **Integer**, never
 silently as Boolean. Boolean is produced **only** when the `typeCoercion` map
 declares the column as `boolean` (consistent with the FlowMCP `boolean()`
 primitive rule).

@@ -7,8 +7,3 @@ coverage/
 *.db-wal
 *.log
 tests/manual/data/
-
-# Synthetic CSV/TSV fixture build artifact (explicit for readability;
-# already covered by the global *.db pattern above). The CSV/TSV in source/
-# are tracked (CC0).
-tests/fixtures/synthetic-csv/synthetic-csv.db

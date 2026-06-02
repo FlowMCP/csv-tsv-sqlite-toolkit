@@ -26,7 +26,6 @@
 #   - tests/fixtures/synthetic-csv/source/*.tsv  (CC0 synthetic data)
 #   - tests/fixtures/synthetic-csv/README.md
 #   - tests/fixtures/synthetic-csv/LICENSE
-#   - tests/fixtures/synthetic-csv/build-fixture.mjs
 #   - scripts/check-no-provider-data.sh          (this script itself)
 #
 
@@ -36,7 +35,6 @@ set -euo pipefail
 WHITELIST_PATHS=(
     "tests/fixtures/synthetic-csv/README.md"
     "tests/fixtures/synthetic-csv/LICENSE"
-    "tests/fixtures/synthetic-csv/build-fixture.mjs"
     "scripts/check-no-provider-data.sh"
 )
 

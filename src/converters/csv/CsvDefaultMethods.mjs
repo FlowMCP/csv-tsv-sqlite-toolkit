@@ -1,13 +1,29 @@
+import { CsvUrlStore } from './CsvUrlStore.mjs'
+
+
+//
+// CsvDefaultMethods
+// -----------------
+// Method catalog PLUS an in-process query engine that runs over the IN-MEMORY
+// rows held by CsvUrlStore (Memo 096 — URL mode, no SQLite). Three methods:
+//
+//   featuresInBBox -> lat/lon bounding-box filter on the normalized lat/lon
+//   nearPoint      -> haversine distance, radius in METERS, sorted ascending
+//   byType         -> exact string match on a configured column
+//
+// Rows are loaded and cached by CsvUrlStore (keyed by url). The algorithms here
+// operate on plain row arrays and are source-agnostic.
+//
+
 const METHOD_CATALOG = [
     {
         name: 'featuresInBBox',
         requiresCapabilities: [ 'spatialQuery' ],
-        sqlTemplate: 'SELECT * FROM rows WHERE lat BETWEEN :minLat AND :maxLat AND lon BETWEEN :minLon AND :maxLon LIMIT :limit',
         params: {
-            minLat: { type: 'number', required: true, description: 'Minimum latitude of the bounding box' },
-            minLon: { type: 'number', required: true, description: 'Minimum longitude of the bounding box' },
-            maxLat: { type: 'number', required: true, description: 'Maximum latitude of the bounding box' },
-            maxLon: { type: 'number', required: true, description: 'Maximum longitude of the bounding box' },
+            minLat: { type: 'number',  required: true,  description: 'South bound (WGS84 latitude)' },
+            minLon: { type: 'number',  required: true,  description: 'West bound (WGS84 longitude)' },
+            maxLat: { type: 'number',  required: true,  description: 'North bound (WGS84 latitude)' },
+            maxLon: { type: 'number',  required: true,  description: 'East bound (WGS84 longitude)' },
             limit:  { type: 'integer', required: false, default: 100, description: 'Max results' }
         },
         outputSchema: {
@@ -18,25 +34,23 @@ const METHOD_CATALOG = [
     {
         name: 'nearPoint',
         requiresCapabilities: [ 'spatialQuery' ],
-        sqlTemplate: 'SELECT * FROM rows WHERE lat IS NOT NULL AND lon IS NOT NULL',
         params: {
-            lat:    { type: 'number', required: true, description: 'Latitude of the center point' },
-            lon:    { type: 'number', required: true, description: 'Longitude of the center point' },
-            radius: { type: 'number', required: false, default: 50, description: 'Search radius in kilometers' },
-            limit:  { type: 'integer', required: false, default: 20, description: 'Max results' }
+            lat:          { type: 'number',  required: true,  description: 'Center latitude (WGS84)' },
+            lon:          { type: 'number',  required: true,  description: 'Center longitude (WGS84)' },
+            radiusMeters: { type: 'number',  required: true,  description: 'Search radius in METERS' },
+            limit:        { type: 'integer', required: false, default: 50, description: 'Max results' }
         },
         outputSchema: {
             type: 'array',
-            items: { type: 'object', properties: { lat: { type: 'number' }, lon: { type: 'number' }, distanceKm: { type: 'number' } } }
+            items: { type: 'object', properties: { lat: { type: 'number' }, lon: { type: 'number' }, distanceM: { type: 'number' } } }
         }
     },
     {
         name: 'byType',
         requiresCapabilities: [ 'attributeFilter' ],
-        sqlTemplate: 'SELECT * FROM rows WHERE :column = :value LIMIT :limit',
         params: {
-            column: { type: 'string', required: true, description: 'Column to filter on' },
-            value:  { type: 'string', required: true, description: 'Exact value to match (string compare)' },
+            column: { type: 'string',  required: true,  description: 'Column to filter on' },
+            value:  { type: 'string',  required: true,  description: 'Exact value to match (string compare)' },
             limit:  { type: 'integer', required: false, default: 100, description: 'Max results' }
         },
         outputSchema: {
@@ -68,5 +82,66 @@ export class CsvDefaultMethods {
             throw new Error( `Unknown method: ${name}` )
         }
         return { ...method }
+    }
+
+
+    static clearCache() {
+        CsvUrlStore.clear()
+    }
+
+
+    static featuresInBBox( { url, minLat, minLon, maxLat, maxLon, limit = 100 } ) {
+        const { rows } = CsvDefaultMethods.#loadRows( { url } )
+        const features = rows
+            .filter( ( row ) => {
+                if( row.lat === null || row.lon === null || row.lat === undefined || row.lon === undefined ) { return false }
+                return row.lat >= minLat && row.lat <= maxLat && row.lon >= minLon && row.lon <= maxLon
+            } )
+            .slice( 0, limit )
+        return { features, matchCount: features.length }
+    }
+
+
+    static nearPoint( { url, lat, lon, radiusMeters, limit = 50 } ) {
+        const { rows } = CsvDefaultMethods.#loadRows( { url } )
+        const features = rows
+            .filter( ( row ) => row.lat !== null && row.lon !== null && row.lat !== undefined && row.lon !== undefined )
+            .map( ( row ) => {
+                const distanceM = CsvDefaultMethods.#haversineKm( {
+                    lat1: lat, lon1: lon, lat2: row.lat, lon2: row.lon
+                } ) * 1000
+                return { ...row, distanceM: Math.round( distanceM * 10 ) / 10 }
+            } )
+            .filter( ( row ) => row.distanceM <= radiusMeters )
+            .sort( ( a, b ) => a.distanceM - b.distanceM )
+            .slice( 0, limit )
+        return { features, matchCount: features.length }
+    }
+
+
+    static byType( { url, column, value, limit = 100 } ) {
+        const { rows } = CsvDefaultMethods.#loadRows( { url } )
+        const features = rows
+            .filter( ( row ) => String( row[ column ] ) === String( value ) )
+            .slice( 0, limit )
+        return { features, matchCount: features.length }
+    }
+
+
+    static #loadRows( { url } ) {
+        return CsvUrlStore.getRows( { url } )
+    }
+
+
+    static #haversineKm( { lat1, lon1, lat2, lon2 } ) {
+        const toRad = ( deg ) => deg * Math.PI / 180
+        const R = 6371
+        const dLat = toRad( lat2 - lat1 )
+        const dLon = toRad( lon2 - lon1 )
+        const a = Math.sin( dLat / 2 ) * Math.sin( dLat / 2 ) +
+            Math.cos( toRad( lat1 ) ) * Math.cos( toRad( lat2 ) ) *
+            Math.sin( dLon / 2 ) * Math.sin( dLon / 2 )
+        const c = 2 * Math.atan2( Math.sqrt( a ), Math.sqrt( 1 - a ) )
+        return R * c
     }
 }
