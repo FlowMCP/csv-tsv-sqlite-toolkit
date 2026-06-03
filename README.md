@@ -64,21 +64,56 @@ The store:
 ## Methods
 
 The query engine loads rows from the in-memory store and serves the shared geo
-method family (Haversine in km internally, radius in **meters** at the API):
+method family (Haversine in km internally, radius in **meters** at the API).
+
+All three methods return a normalized **RFC 7946 FeatureCollection** (lon-first
+coordinates) — the shared "gleicher Standard" geo output contract, identical to
+`geojson-sqlite-toolkit` and `geo-overpass-toolkit`. Every data column (all
+columns except the lat/lon coordinate fields) is carried inside the feature's
+`properties`, alongside `_source` (`'csv-tsv'`) and `_distanceMeters` (the
+haversine metres for `nearPoint`, `null` for the others).
 
 | Method | Input | Output |
 |--------|-------|--------|
-| `nearPoint` | `{ url, lat, lon, radiusMeters, limit? }` | rows near a point, distance-sorted (`distanceM` in output) |
-| `inBoundingBox` | `{ url, minLon, minLat, maxLon, maxLat, limit? }` (lon-first RFC 7946) | rows inside the bbox |
-| `byType` | `{ url, column, value, limit? }` | rows matching an exact column value |
+| `nearPoint` | `{ url, lat, lon, radiusMeters, limit? }` | FeatureCollection, distance-sorted (`_distanceMeters` in `properties`) |
+| `inBoundingBox` | `{ url, minLon, minLat, maxLon, maxLat, limit? }` (lon-first RFC 7946) | FeatureCollection of features inside the bbox |
+| `byType` | `{ url, column, value, limit? }` | FeatureCollection of features matching an exact column value |
 
 ```javascript
 import { CsvDefaultMethods } from 'geo-csv-tsv-toolkit'
 
-CsvDefaultMethods.nearPoint( { url, lat, lon, radiusMeters, limit } )   // sorted by distance, distanceM in output
+CsvDefaultMethods.nearPoint( { url, lat, lon, radiusMeters, limit } )   // sorted by distance, _distanceMeters in properties
 CsvDefaultMethods.inBoundingBox( { url, minLon, minLat, maxLon, maxLat, limit } )
 CsvDefaultMethods.byType( { url, column, value, limit } )
 ```
+
+### Output shape (RFC 7946)
+
+```json
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": { "type": "Point", "coordinates": [ 10.0, 50.0 ] },
+            "properties": {
+                "name": "Alpha",
+                "population": 3700,
+                "_source": "csv-tsv",
+                "_distanceMeters": 12.3
+            }
+        }
+    ],
+    "meta": { "count": 1, "source": "csv-tsv" }
+}
+```
+
+- `geometry.coordinates` is **lon-first** `[ lon, lat ]` (RFC 7946).
+- The lat/lon coordinate fields are removed from `properties`; every other
+  column is preserved.
+- `_distanceMeters` is the haversine distance in metres (rounded to 0.1) for
+  `nearPoint`, `null` for `inBoundingBox` / `byType`.
+- `meta.count` equals `features.length`.
 
 The optional `selection` / `categories[]` slots in the shared family are
 **Overpass-only** and are ignored by this static add-on (declared, not silently

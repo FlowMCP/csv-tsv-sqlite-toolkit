@@ -56,7 +56,14 @@ export class CsvUrlStore {
             rowCount: typedRows.length
         } )
 
-        _cacheByUrl.set( url, { rows: typedRows, headers, capabilities, timestamp: now } )
+        _cacheByUrl.set( url, {
+            rows: typedRows,
+            headers,
+            capabilities,
+            latColumn: parseConfig.latColumn,
+            lonColumn: parseConfig.lonColumn,
+            timestamp: now
+        } )
 
         return { url, capabilities, recordCount: typedRows.length, fromCache: false }
     }
@@ -67,7 +74,7 @@ export class CsvUrlStore {
         if( !cached ) {
             throw new Error( `CSV-URL-004: no in-memory data for url '${url}'. Call loadFromUrl first.` )
         }
-        return { rows: cached.rows }
+        return { rows: cached.rows, latColumn: cached.latColumn, lonColumn: cached.lonColumn }
     }
 
 

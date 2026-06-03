@@ -49,12 +49,14 @@ async function main() {
     const bbox = CsvDefaultMethods.inBoundingBox( {
         url, minLon: 5, minLat: 47, maxLon: 15, maxLat: 55, limit: 100
     } )
-    console.log( '[run-all] inBoundingBox matchCount:', bbox.matchCount )
+    console.log( '[run-all] inBoundingBox:', bbox.type, 'count:', bbox.meta.count, 'source:', bbox.meta.source )
+    console.log( '[run-all] inBoundingBox first feature:', JSON.stringify( bbox.features[ 0 ] ) )
 
     const near = CsvDefaultMethods.nearPoint( {
         url, lat: 52.52, lon: 13.405, radiusMeters: 500000, limit: 50
     } )
-    console.log( '[run-all] nearPoint matchCount:', near.matchCount )
+    console.log( '[run-all] nearPoint:', near.type, 'count:', near.meta.count, 'source:', near.meta.source )
+    console.log( '[run-all] nearPoint first feature:', JSON.stringify( near.features[ 0 ] ) )
 
     process.exit( 0 )
 }
