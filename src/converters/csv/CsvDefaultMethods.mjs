@@ -7,7 +7,7 @@ import { CsvUrlStore } from './CsvUrlStore.mjs'
 // Method catalog PLUS an in-process query engine that runs over the IN-MEMORY
 // rows held by CsvUrlStore (Memo 096 — URL mode, no SQLite). Three methods:
 //
-//   featuresInBBox -> lat/lon bounding-box filter on the normalized lat/lon
+//   inBoundingBox  -> lon-first bounding-box filter on the normalized lat/lon (RFC 7946)
 //   nearPoint      -> haversine distance, radius in METERS, sorted ascending
 //   byType         -> exact string match on a configured column
 //
@@ -17,14 +17,16 @@ import { CsvUrlStore } from './CsvUrlStore.mjs'
 
 const METHOD_CATALOG = [
     {
-        name: 'featuresInBBox',
+        name: 'inBoundingBox',
         requiresCapabilities: [ 'spatialQuery' ],
         params: {
-            minLat: { type: 'number',  required: true,  description: 'South bound (WGS84 latitude)' },
-            minLon: { type: 'number',  required: true,  description: 'West bound (WGS84 longitude)' },
-            maxLat: { type: 'number',  required: true,  description: 'North bound (WGS84 latitude)' },
-            maxLon: { type: 'number',  required: true,  description: 'East bound (WGS84 longitude)' },
-            limit:  { type: 'integer', required: false, default: 100, description: 'Max results' }
+            minLon:     { type: 'number',  required: true,  description: 'West bound (WGS84 longitude, lon-first RFC 7946)' },
+            minLat:     { type: 'number',  required: true,  description: 'South bound (WGS84 latitude)' },
+            maxLon:     { type: 'number',  required: true,  description: 'East bound (WGS84 longitude)' },
+            maxLat:     { type: 'number',  required: true,  description: 'North bound (WGS84 latitude)' },
+            selection:  { type: 'string',  required: false, description: 'Overpass-only selection id — ignored by static add-ons' },
+            categories: { type: 'array',   required: false, description: 'Overpass-only category ids — ignored by static add-ons' },
+            limit:      { type: 'integer', required: false, default: 100, description: 'Max results' }
         },
         outputSchema: {
             type: 'array',
@@ -38,6 +40,8 @@ const METHOD_CATALOG = [
             lat:          { type: 'number',  required: true,  description: 'Center latitude (WGS84)' },
             lon:          { type: 'number',  required: true,  description: 'Center longitude (WGS84)' },
             radiusMeters: { type: 'number',  required: true,  description: 'Search radius in METERS' },
+            selection:    { type: 'string',  required: false, description: 'Overpass-only selection id — ignored by static add-ons' },
+            categories:   { type: 'array',   required: false, description: 'Overpass-only category ids — ignored by static add-ons' },
             limit:        { type: 'integer', required: false, default: 50, description: 'Max results' }
         },
         outputSchema: {
@@ -90,12 +94,12 @@ export class CsvDefaultMethods {
     }
 
 
-    static featuresInBBox( { url, minLat, minLon, maxLat, maxLon, limit = 100 } ) {
+    static inBoundingBox( { url, minLon, minLat, maxLon, maxLat, limit = 100 } ) {
         const { rows } = CsvDefaultMethods.#loadRows( { url } )
         const features = rows
             .filter( ( row ) => {
                 if( row.lat === null || row.lon === null || row.lat === undefined || row.lon === undefined ) { return false }
-                return row.lat >= minLat && row.lat <= maxLat && row.lon >= minLon && row.lon <= maxLon
+                return row.lon >= minLon && row.lon <= maxLon && row.lat >= minLat && row.lat <= maxLat
             } )
             .slice( 0, limit )
         return { features, matchCount: features.length }

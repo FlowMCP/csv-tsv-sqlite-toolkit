@@ -1,6 +1,6 @@
 # CSV-NNN Error Codes
 
-Reference for all codes emitted by `csv-tsv-sqlite-toolkit`. There are two
+Reference for all codes emitted by `geo-csv-tsv-toolkit`. There are two
 families: the `CSV-URL-NNN` codes from the URL-mode load path (Memo 096) and the
 underlying `CSV-NNN` parser codes, grouped by severity via the numeric range.
 

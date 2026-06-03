@@ -1,4 +1,4 @@
-# csv-tsv-sqlite-toolkit
+# geo-csv-tsv-toolkit
 
 <!-- Badges (License, Node, Workflow, Coverage) — enabled after going public -->
 <!-- ![License](https://img.shields.io/github/license/FlowMCP/csv-tsv-sqlite-toolkit) -->
@@ -7,9 +7,8 @@
 <!-- ![Coverage](https://img.shields.io/codecov/c/github/FlowMCP/csv-tsv-sqlite-toolkit) -->
 
 Load geo **CSV/TSV** files from a URL into memory and expose reusable
-spatial/attribute queries as FlowMCP auto-tools. There is **no SQLite file** and
-**no file seal** — the complete file is fetched in a single request, validated
-on load, and held in memory (Memo 096 URL model).
+spatial/attribute queries as FlowMCP auto-tools. The complete file is fetched in
+a single request, validated on load, and held in memory (Memo 096 URL model).
 
 Unlike GeoJSON, a CSV/TSV file is **not self-describing**: the separator, the
 decimal notation, and which columns carry latitude/longitude cannot be derived
@@ -17,9 +16,14 @@ from the file. This toolkit therefore enforces a **mandatory parse config with
 no silent defaults** — you must declare `separator`, `decimal`, `latColumn`,
 `lonColumn`, and a `typeCoercion` map explicitly, or the load aborts.
 
-This is a sibling of [`geojson-sqlite-toolkit`](https://github.com/FlowMCP/geojson-sqlite-toolkit)
-and follows the same FlowMCP add-on pattern (own repo → thin URL schema →
-in-memory load → auto-inject via `FlowMcpAdapter`).
+This add-on is part of the FlowMCP geo add-on family (`geo-geojson-toolkit` /
+`geo-csv-tsv-toolkit` / `gtfs-sqlite-toolkit` / `geo-overpass-toolkit`). It shares
+the common geo method family — `nearPoint`, `inBoundingBox`, `byType`.
+
+## Runtime category
+
+**In-Memory** (URL model, no SQLite). The complete CSV/TSV is fetched in one
+request and held in memory keyed by URL — there is no `.db` file and no file seal.
 
 ## Install
 
@@ -35,7 +39,7 @@ parser.
 ## Load
 
 ```javascript
-import { CsvUrlStore } from 'csv-tsv-sqlite-toolkit'
+import { CsvUrlStore } from 'geo-csv-tsv-toolkit'
 
 const result = await CsvUrlStore.loadFromUrl( {
     url: 'https://example.org/places.csv',   // HTTPS only
@@ -57,23 +61,33 @@ The store:
 3. Parses (`CsvParser`) and validates on load — the configured geo and `typeCoercion` columns must exist.
 4. Coerces every cell with `TypeCoercer` and holds the rows in memory keyed by URL (24 h TTL).
 
-## Query
+## Methods
 
-The query engine loads rows from the in-memory store and serves three queries
-(Haversine in km internally, radius in **meters** at the API):
+The query engine loads rows from the in-memory store and serves the shared geo
+method family (Haversine in km internally, radius in **meters** at the API):
+
+| Method | Input | Output |
+|--------|-------|--------|
+| `nearPoint` | `{ url, lat, lon, radiusMeters, limit? }` | rows near a point, distance-sorted (`distanceM` in output) |
+| `inBoundingBox` | `{ url, minLon, minLat, maxLon, maxLat, limit? }` (lon-first RFC 7946) | rows inside the bbox |
+| `byType` | `{ url, column, value, limit? }` | rows matching an exact column value |
 
 ```javascript
-import { CsvDefaultMethods } from 'csv-tsv-sqlite-toolkit'
+import { CsvDefaultMethods } from 'geo-csv-tsv-toolkit'
 
-CsvDefaultMethods.featuresInBBox( { url, minLat, minLon, maxLat, maxLon, limit } )
 CsvDefaultMethods.nearPoint( { url, lat, lon, radiusMeters, limit } )   // sorted by distance, distanceM in output
+CsvDefaultMethods.inBoundingBox( { url, minLon, minLat, maxLon, maxLat, limit } )
 CsvDefaultMethods.byType( { url, column, value, limit } )
 ```
+
+The optional `selection` / `categories[]` slots in the shared family are
+**Overpass-only** and are ignored by this static add-on (declared, not silently
+dropped).
 
 ## FlowMCP integration
 
 ```javascript
-import { FlowMcpAdapter } from 'csv-tsv-sqlite-toolkit'
+import { FlowMcpAdapter } from 'geo-csv-tsv-toolkit'
 
 await FlowMcpAdapter.loadFromUrl( { url, parseConfig } )
 // -> { loaded: true, url, capabilities, recordCount, fromCache }
@@ -90,8 +104,8 @@ FlowMcpAdapter.buildToolDefinitions( { url, namespace: 'places' } )
 `buildToolDefinitions` emits the following tools, subject to the loaded file's
 capability matrix:
 
-- `featuresInBBox` — rows within a latitude/longitude bounding box (requires `spatialQuery`)
 - `nearPoint` — rows near a coordinate, Haversine-sorted (requires `spatialQuery`)
+- `inBoundingBox` — rows within a lon-first bounding box (requires `spatialQuery`)
 - `byType` — exact-match attribute filter on any column (requires `attributeFilter`)
 
 Tool names are prefixed with the schema namespace (e.g. `places.nearPoint`).
@@ -110,10 +124,10 @@ export const schema = {
     main: {
         resources: [
             {
-                source:       'url-csv',
+                source:       'geo-csv',
                 url:          'https://example.org/places.csv',
-                addon:        'csv-tsv-sqlite-toolkit',
-                addonVersion: '>=0.1.0',
+                addon:        'geo-csv-tsv-toolkit',
+                addonVersion: '>=1.0.0',
                 addonSource:  'github:FlowMCP/csv-tsv-sqlite-toolkit',
                 parseConfig: {
                     separator: 'semicolon',

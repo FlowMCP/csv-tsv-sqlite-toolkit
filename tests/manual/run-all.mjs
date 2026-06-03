@@ -46,10 +46,10 @@ async function main() {
     const { tools } = FlowMcpAdapter.buildToolDefinitions( { url, namespace: 'places' } )
     console.log( '[run-all] tools:', tools.map( ( t ) => t.name ) )
 
-    const bbox = CsvDefaultMethods.featuresInBBox( {
-        url, minLat: 47, minLon: 5, maxLat: 55, maxLon: 15, limit: 100
+    const bbox = CsvDefaultMethods.inBoundingBox( {
+        url, minLon: 5, minLat: 47, maxLon: 15, maxLat: 55, limit: 100
     } )
-    console.log( '[run-all] featuresInBBox matchCount:', bbox.matchCount )
+    console.log( '[run-all] inBoundingBox matchCount:', bbox.matchCount )
 
     const near = CsvDefaultMethods.nearPoint( {
         url, lat: 52.52, lon: 13.405, radiusMeters: 500000, limit: 50
