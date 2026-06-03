@@ -58,12 +58,12 @@ describe( 'TypeCoercer', () => {
     } )
 
 
-    test( 'sqliteTypeFor maps target types to storage classes', () => {
-        expect( TypeCoercer.sqliteTypeFor( { targetType: 'integer' } ).type ).toBe( 'INTEGER' )
-        expect( TypeCoercer.sqliteTypeFor( { targetType: 'number' } ).type ).toBe( 'REAL' )
-        expect( TypeCoercer.sqliteTypeFor( { targetType: 'boolean' } ).type ).toBe( 'INTEGER' )
-        expect( TypeCoercer.sqliteTypeFor( { targetType: 'string' } ).type ).toBe( 'TEXT' )
-        const unknown = TypeCoercer.sqliteTypeFor( { targetType: 'weird' } )
+    test( 'storageTypeFor maps target types to storage classes', () => {
+        expect( TypeCoercer.storageTypeFor( { targetType: 'integer' } ).type ).toBe( 'INTEGER' )
+        expect( TypeCoercer.storageTypeFor( { targetType: 'number' } ).type ).toBe( 'REAL' )
+        expect( TypeCoercer.storageTypeFor( { targetType: 'boolean' } ).type ).toBe( 'INTEGER' )
+        expect( TypeCoercer.storageTypeFor( { targetType: 'string' } ).type ).toBe( 'TEXT' )
+        const unknown = TypeCoercer.storageTypeFor( { targetType: 'weird' } )
         expect( unknown.status ).toBe( false )
         expect( unknown.type ).toBe( 'TEXT' )
     } )

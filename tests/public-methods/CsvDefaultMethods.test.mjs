@@ -45,7 +45,7 @@ afterAll( () => {
 describe( 'CsvDefaultMethods catalog', () => {
     test( 'getAllMethods returns the three methods (no sqlTemplate)', () => {
         const methods = CsvDefaultMethods.getAllMethods()
-        expect( methods.map( ( m ) => m.name ) ).toEqual( [ 'featuresInBBox', 'nearPoint', 'byType' ] )
+        expect( methods.map( ( m ) => m.name ) ).toEqual( [ 'inBoundingBox', 'nearPoint', 'byType' ] )
         methods.forEach( ( m ) => {
             expect( m.sqlTemplate ).toBeUndefined()
             expect( typeof m.params ).toBe( 'object' )
@@ -57,7 +57,7 @@ describe( 'CsvDefaultMethods catalog', () => {
     test( 'getMethodsForCapabilities gates spatial methods', () => {
         const caps = { spatialQuery: false, attributeFilter: true }
         const names = CsvDefaultMethods.getMethodsForCapabilities( { capabilities: caps } ).map( ( m ) => m.name )
-        expect( names ).not.toContain( 'featuresInBBox' )
+        expect( names ).not.toContain( 'inBoundingBox' )
         expect( names ).not.toContain( 'nearPoint' )
         expect( names ).toContain( 'byType' )
     } )
@@ -76,10 +76,10 @@ describe( 'CsvDefaultMethods catalog', () => {
 } )
 
 
-describe( 'CsvDefaultMethods.featuresInBBox (in-memory)', () => {
+describe( 'CsvDefaultMethods.inBoundingBox (in-memory, lon-first RFC 7946)', () => {
     test( 'enclosing bbox returns the near cluster', () => {
-        const { features, matchCount } = CsvDefaultMethods.featuresInBBox( {
-            url: URL, minLat: 49.9, minLon: 9.9, maxLat: 50.2, maxLon: 10.2
+        const { features, matchCount } = CsvDefaultMethods.inBoundingBox( {
+            url: URL, minLon: 9.9, minLat: 49.9, maxLon: 10.2, maxLat: 50.2
         } )
         expect( matchCount ).toBe( 2 )
         features.forEach( ( f ) => expect( f.lat ).toBeGreaterThan( 49 ) )
@@ -87,8 +87,51 @@ describe( 'CsvDefaultMethods.featuresInBBox (in-memory)', () => {
 
 
     test( 'disjoint bbox returns 0', () => {
-        const { matchCount } = CsvDefaultMethods.featuresInBBox( {
-            url: URL, minLat: 80, minLon: 100, maxLat: 85, maxLon: 110
+        const { matchCount } = CsvDefaultMethods.inBoundingBox( {
+            url: URL, minLon: 100, minLat: 80, maxLon: 110, maxLat: 85
+        } )
+        expect( matchCount ).toBe( 0 )
+    } )
+} )
+
+
+describe( 'CsvDefaultMethods.inBoundingBox axis regression (lon-first)', () => {
+    const BERLIN_URL = 'https://example.org/berlin.csv'
+    const BERLIN_CSV = [
+        'id;name;lat;lon',
+        '1;Mitte;52,5200;13,4050',
+        '2;Charlottenburg;52,5050;13,3000'
+    ].join( '\n' )
+    const BERLIN_CONFIG = {
+        separator: 'semicolon',
+        decimal: 'comma',
+        latColumn: 'lat',
+        lonColumn: 'lon',
+        typeCoercion: {}
+    }
+
+
+    beforeAll( async () => {
+        global.fetch = async () => ( {
+            ok: true,
+            status: 200,
+            text: async () => BERLIN_CSV
+        } )
+        await CsvUrlStore.loadFromUrl( { url: BERLIN_URL, parseConfig: BERLIN_CONFIG } )
+    } )
+
+
+    test( 'a correct lon-first Berlin box returns the rows', () => {
+        const { matchCount } = CsvDefaultMethods.inBoundingBox( {
+            url: BERLIN_URL, minLon: 13.0, minLat: 52.3, maxLon: 13.8, maxLat: 52.7
+        } )
+        expect( matchCount ).toBe( 2 )
+    } )
+
+
+    test( 'a swapped (lat-first) box returns empty — proves axis assignment', () => {
+        const { matchCount } = CsvDefaultMethods.inBoundingBox( {
+            url: BERLIN_URL, minLon: 52.3, minLat: 13.0, maxLon: 52.7, maxLat: 13.8
         } )
         expect( matchCount ).toBe( 0 )
     } )

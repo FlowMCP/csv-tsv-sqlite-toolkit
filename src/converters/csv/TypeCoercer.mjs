@@ -1,6 +1,6 @@
 const BOOLEAN_TRUE_TOKENS = [ '1', 'true', 'ja', 'yes', 'y' ]
 const BOOLEAN_FALSE_TOKENS = [ '0', 'false', 'nein', 'no', 'n' ]
-const SQLITE_TYPE_MAP = {
+const STORAGE_TYPE_MAP = {
     integer: 'INTEGER',
     number: 'REAL',
     boolean: 'INTEGER',
@@ -30,8 +30,8 @@ export class TypeCoercer {
     }
 
 
-    static sqliteTypeFor( { targetType } ) {
-        const type = SQLITE_TYPE_MAP[ targetType ]
+    static storageTypeFor( { targetType } ) {
+        const type = STORAGE_TYPE_MAP[ targetType ]
         if( type === undefined ) {
             return { type: 'TEXT', status: false }
         }

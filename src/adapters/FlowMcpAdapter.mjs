@@ -26,7 +26,7 @@ export class FlowMcpAdapter {
         if( !status ) { throw new Error( messages.join( '; ' ) ) }
 
         const fn = CsvDefaultMethods[ method ]
-        const known = [ 'featuresInBBox', 'nearPoint', 'byType' ]
+        const known = [ 'inBoundingBox', 'nearPoint', 'byType' ]
         if( !known.includes( method ) || typeof fn !== 'function' ) {
             throw new Error( `Unknown method: ${method}` )
         }
