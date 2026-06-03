@@ -1,8 +1,8 @@
 {
     "name": "geo-csv-tsv-toolkit",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "type": "module",
-    "description": "FlowMCP geo add-on (In-Memory): load geo CSV/TSV files from a URL with mandatory parse config, validate-on-load, and the shared geo method family (nearPoint, inBoundingBox, byType) — no SQLite, no file seal",
+    "description": "FlowMCP geo add-on (In-Memory): load geo CSV/TSV files from a URL with mandatory parse config, validate-on-load, and the shared geo method family (nearPoint, inBoundingBox, byType) returning a normalized RFC 7946 FeatureCollection — no SQLite, no file seal",
     "main": "src/index.mjs",
     "license": "MIT",
     "author": "FlowMCP",
