@@ -13,7 +13,7 @@ import { CsvUrlStore } from './CsvUrlStore.mjs'
 //
 // All three methods return a normalized RFC 7946 FeatureCollection (lon-first
 // coordinates) — the shared "gleicher Standard" geo output contract, identical
-// to geojson-sqlite-toolkit and geo-overpass-toolkit. Every data column (all
+// to geo-geojson-toolkit and geo-overpass-toolkit. Every data column (all
 // columns except the lat/lon coordinate fields) is carried inside the feature's
 // `properties`, alongside `_source` ('csv-tsv') and `_distanceMeters` (the
 // haversine metres for nearPoint, null otherwise).

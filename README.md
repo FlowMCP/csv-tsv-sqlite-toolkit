@@ -3,10 +3,10 @@
 **Version:** 2.0.0
 
 <!-- Badges (License, Node, Workflow, Coverage) — enabled after going public -->
-<!-- ![License](https://img.shields.io/github/license/FlowMCP/csv-tsv-sqlite-toolkit) -->
+<!-- ![License](https://img.shields.io/github/license/FlowMCP/geo-csv-tsv-toolkit) -->
 <!-- ![Node](https://img.shields.io/badge/node-22-blue) -->
-<!-- ![Workflow](https://img.shields.io/github/actions/workflow/status/FlowMCP/csv-tsv-sqlite-toolkit/test-on-push.yml) -->
-<!-- ![Coverage](https://img.shields.io/codecov/c/github/FlowMCP/csv-tsv-sqlite-toolkit) -->
+<!-- ![Workflow](https://img.shields.io/github/actions/workflow/status/FlowMCP/geo-csv-tsv-toolkit/test-on-push.yml) -->
+<!-- ![Coverage](https://img.shields.io/codecov/c/github/FlowMCP/geo-csv-tsv-toolkit) -->
 
 Load geo **CSV/TSV** files from a URL into memory and expose reusable
 spatial/attribute queries as FlowMCP auto-tools. The complete file is fetched in
@@ -19,7 +19,7 @@ no silent defaults** — you must declare `separator`, `decimal`, `latColumn`,
 `lonColumn`, and a `typeCoercion` map explicitly, or the load aborts.
 
 This add-on is part of the FlowMCP geo add-on family (`geo-geojson-toolkit` /
-`geo-csv-tsv-toolkit` / `gtfs-sqlite-toolkit` / `geo-overpass-toolkit`). It shares
+`geo-csv-tsv-toolkit` / `geo-gtfs-toolkit` / `geo-overpass-toolkit`). It shares
 the common geo method family — `nearPoint`, `inBoundingBox`, `byType`.
 
 ## Runtime category
@@ -32,7 +32,7 @@ request and held in memory keyed by URL — there is no `.db` file and no file s
 This package is not published to npm. Use it via GitHub:
 
 ```bash
-npm install github:FlowMCP/csv-tsv-sqlite-toolkit
+npm install github:FlowMCP/geo-csv-tsv-toolkit
 ```
 
 No native dependencies — the load path uses the global `fetch` and a pure-JS
@@ -70,7 +70,7 @@ method family (Haversine in km internally, radius in **meters** at the API).
 
 All three methods return a normalized **RFC 7946 FeatureCollection** (lon-first
 coordinates) — the shared "gleicher Standard" geo output contract, identical to
-`geojson-sqlite-toolkit` and `geo-overpass-toolkit`. Every data column (all
+`geo-geojson-toolkit` and `geo-overpass-toolkit`. Every data column (all
 columns except the lat/lon coordinate fields) is carried inside the feature's
 `properties`, alongside `_source` (`'csv-tsv'`) and `_distanceMeters` (the
 haversine metres for `nearPoint`, `null` for the others).
@@ -165,7 +165,7 @@ export const schema = {
                 url:          'https://example.org/places.csv',
                 addon:        'geo-csv-tsv-toolkit',
                 addonVersion: '>=1.0.0',
-                addonSource:  'github:FlowMCP/csv-tsv-sqlite-toolkit',
+                addonSource:  'github:FlowMCP/geo-csv-tsv-toolkit',
                 parseConfig: {
                     separator: 'semicolon',
                     decimal:   'comma',
@@ -241,8 +241,8 @@ commits that add foreign data files.
 ## Tests
 
 ```bash
-git clone https://github.com/FlowMCP/csv-tsv-sqlite-toolkit
-cd csv-tsv-sqlite-toolkit
+git clone https://github.com/FlowMCP/geo-csv-tsv-toolkit
+cd geo-csv-tsv-toolkit
 npm install
 npm test                 # jest unit suites (stubbed fetch, no live network)
 npm run test:coverage:src

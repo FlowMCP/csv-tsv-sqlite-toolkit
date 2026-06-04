@@ -2,7 +2,7 @@
 #
 # check-no-provider-data.sh
 # -------------------------
-# Pre-push guardrail for csv-tsv-sqlite-toolkit (Memo 092 PRD-G2).
+# Pre-push guardrail for geo-csv-tsv-toolkit (Memo 092 PRD-G2).
 #
 # Purpose:
 #   Prevents accidental commit of third-party geo CSV/TSV datasets (e.g.

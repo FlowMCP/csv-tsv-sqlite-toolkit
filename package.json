@@ -8,12 +8,12 @@
     "author": "FlowMCP",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/FlowMCP/csv-tsv-sqlite-toolkit.git"
+        "url": "git+https://github.com/FlowMCP/geo-csv-tsv-toolkit.git"
     },
     "bugs": {
-        "url": "https://github.com/FlowMCP/csv-tsv-sqlite-toolkit/issues"
+        "url": "https://github.com/FlowMCP/geo-csv-tsv-toolkit/issues"
     },
-    "homepage": "https://github.com/FlowMCP/csv-tsv-sqlite-toolkit#readme",
+    "homepage": "https://github.com/FlowMCP/geo-csv-tsv-toolkit#readme",
     "engines": {
         "node": ">=22.0.0"
     },
