@@ -1,5 +1,7 @@
 # geo-csv-tsv-toolkit
 
+**Version:** 2.0.0
+
 <!-- Badges (License, Node, Workflow, Coverage) — enabled after going public -->
 <!-- ![License](https://img.shields.io/github/license/FlowMCP/csv-tsv-sqlite-toolkit) -->
 <!-- ![Node](https://img.shields.io/badge/node-22-blue) -->
